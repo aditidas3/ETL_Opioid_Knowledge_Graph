@@ -1,0 +1,32 @@
+** Query 1 - Top 10 drugs seen in the dataset
+MATCH (e:Email)-[:EMAIL_MENTIONS_DRUG]->(d:RxNormDrug)
+RETURN d.name AS drug,
+       count(DISTINCT e) AS email_count
+ORDER BY email_count DESC
+LIMIT 10;
+
+
+** Query 2 - Top 5 locations seen in the dataset
+MATCH (l:Location)
+MATCH (e:Email)-[:EMAIL_MENTIONS_LOCATION]->(l)
+MATCH (e)-[:EMAIL_MENTIONS_DRUG]->(d:RxNormDrug)
+RETURN d.name AS drug,
+       count(DISTINCT e) AS email_count
+ORDER BY email_count DESC
+LIMIT 20;
+
+
+** Query 3 - 
+// 1) Subquery: find top organizations that mentions poland
+MATCH (l:Location)-[:EMAIL_MENTIONS_LOCATION]-(e:Email)-[:SENT|SENT_TO]-(p:Person)
+WHERE l.name IN ['Poland']   // can add list of locations here
+WITH DISTINCT p, l
+MERGE (p)-[:PERSON_MENTIONED_POLAND]->(l);
+
+// 2) Organization and People associated with Poland
+MATCH (p:Person)-[:PERSON_MENTIONED_POLAND]->(l:Location)
+MATCH (p)-[:AFFILIATED_WITH]->(o:Organization)
+WHERE l.name IN ['Poland']
+WITH o, count(DISTINCT p) AS people_count
+ORDER BY people_count DESC
+RETURN o.name AS organization, people_count;
