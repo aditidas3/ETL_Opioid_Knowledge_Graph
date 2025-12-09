@@ -30,3 +30,138 @@ WHERE l.name IN ['Poland']
 WITH o, count(DISTINCT p) AS people_count
 ORDER BY people_count DESC
 RETURN o.name AS organization, people_count;
+
+
+**Here we are creating multiple drug relationships:**
+
+    Creating New Relationships
+    Original data has:
+    •	Person → SENT → Email → EMAIL_MENTIONS_DRUG → RxNormDrug
+    New relationships you can create:
+    •	Person → DISCUSSES_DRUG → RxNormDrug (direct connection)
+    •	RxNormDrug → CO_MENTIONED_WITH → RxNormDrug (drugs discussed together)
+    •	Organization → RESEARCHES_DRUG → RxNormDrug (company-drug link)
+    •	Person → COLLABORATES_ON_DRUG → Person (shared drug discussions)
+
+    Person-Drug Direct Relationships
+    Create DISCUSSES_DRUG Relationship
+
+cypher
+// Connect people directly to drugs they discuss
+MATCH (p:Person)-[:SENT]->(e:Email)-[:EMAIL_MENTIONS_DRUG]->(drug:RxNormDrug)
+WITH p, drug, count(e) as mention_count
+MERGE (p)-[r:DISCUSSES_DRUG]->(drug)
+SET r.frequency = mention_count,
+    r.created = timestamp()
+RETURN p.name, drug.name, mention_count
+
+cypher
+// See the new relationships
+MATCH (p:Person)-[r:DISCUSSES_DRUG]->(drug:RxNormDrug)
+RETURN p, r, drug
+LIMIT 100
+
+cypher
+// Much simpler query!
+MATCH (p:Person)-[r:DISCUSSES_DRUG]->(drug:RxNormDrug)
+WHERE r.frequency > 5
+RETURN p, r, drug
+ORDER BY r.frequency DESC
+Create RECEIVES_DRUG_INFO Relationship
+
+cypher
+// Connect recipients to drugs they receive info about
+MATCH (e:Email)-[:EMAIL_MENTIONS_DRUG]->(drug:RxNormDrug)
+MATCH (e)-[:SENT_TO]->(recipient:Person)
+WITH recipient, drug, count(e) as received_count
+MERGE (recipient)-[r:RECEIVES_DRUG_INFO]->(drug)
+SET r.frequency = received_count,
+    r.created = timestamp()
+RETURN recipient.name, drug.name, received_count
+
+
+**Cases that have highest emails**
+cypher
+// Cases that have the highest number of emails
+MATCH (c:Case)-[:HAS_EMAIL]->(e:Email)
+WITH c, count(e) as email_count
+ORDER BY email_count DESC
+LIMIT 10
+RETURN c.identifier as case_id,
+c.legalStatus as status,
+c.dateFiled as filed_date,
+email_count;
+
+
+
+**Persons with highest activity for case_id = 'Case-17-md-02804-DAP'**
+cypher
+// Cases with the highest activity 
+MATCH (c:Case {identifier: 'Case-17-md-02804-DAP'})-[:HAS_EMAIL]->(e:Email)
+MATCH (p:Person)-[:SENT|SENT_TO]-(e)
+OPTIONAL MATCH (p)-[:AFFILIATED_WITH]->(o:Organization)
+WITH DISTINCT p, collect(DISTINCT o.name) as organizations
+OPTIONAL MATCH (p)-[:SENT]->(sent:Email)
+OPTIONAL MATCH (received:Email)-[:SENT_TO]->(p)
+WITH p, organizations,
+count(DISTINCT sent) as sent_count,
+count(DISTINCT received) as received_count
+RETURN p.name as person_name,
+p.email as email,
+organizations,
+sent_count,
+received_count,
+sent_count + received_count as total_activity
+ORDER BY total_activity DESC;
+
+
+**Case id (for case_id = 'Case-17-md-02804-DAP') with the nodes and relationships**
+MATCH path = (c:Case {identifier: 'Case-17-md-02804-DAP'})-[*1..3]->(n)
+RETURN path
+LIMIT 300;
+
+
+**Documents attached for case_id = 'Case-17-md-02804-DAP'**
+// All Documents/Attachments
+MATCH (c:Case {identifier: 'Case-17-md-02804-DAP'})-[:CASE_HAS_DOCUMENT]->(d:Document)
+OPTIONAL MATCH (e:Email)-[:HAS_ATTACHMENT]->(d)
+RETURN d.name as document_name,
+d.fileFormat as file_format,
+d.description as description,
+count(DISTINCT e) as attached_to_emails
+ORDER BY attached_to_emails DESC;
+
+
+
+
+**Drug_person_organization relationship for case_id = 'Case-17-md-02804-DAP'**
+
+MATCH (c:Case {identifier: 'Case-17-md-02804-DAP'})
+
+/* Step 1: Get people connected to the case */
+MATCH (c)-[*1..3]-(p:Person)
+
+/* Step 2: Person ↔ Drug relationships */
+MATCH (p)-[r1:DISCUSSES_DRUG|RECEIVES_DRUG_INFO]-(drug:RxNormDrug)
+
+/* Step 3: Optional: Person → Organization */
+OPTIONAL MATCH (p)-[r2:AFFILIATED_WITH]->(org:Organization)
+
+/* Step 4: Optional: Organization → Drug */
+OPTIONAL MATCH (org)-[r3:RESEARCHES_DRUG]->(drug)
+
+/* Step 5: Optional: Drug ↔ Other drugs */
+OPTIONAL MATCH (drug)-[r4:CO_MENTIONED_WITH]-(other_drug:RxNormDrug)
+
+RETURN c, p, r1, drug, r2, org, r3, r4, other_drug
+LIMIT 1000;
+
+
+##how many time the drug is mentioned
+MATCH (c:Case {identifier: 'Case-17-md-02804-DAP'})
+MATCH (c)-[*1..3]-(p:Person)
+MATCH (p)-[r:DISCUSSES_DRUG|RECEIVES_DRUG_INFO]-(drug:RxNormDrug)
+RETURN drug.name AS drug_name, COUNT(r) AS mention_count
+ORDER BY mention_count DESC;
+
+
