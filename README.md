@@ -6,17 +6,17 @@ This project builds an end-to-end ETL pipeline that transforms raw opioid-relate
 
 ### **Part 1 - Data Extraction & JSON Generation**
 
-* Connects to the UCSF-hosted SQL database (VPN required).
-* Extracts raw email bodies from Solr.
-* Uses openAPI LLM to convert unstructured text into structured JSON.
-* Outputs standardized JSON files ready for downstream enrichment.
+* Connect to the UCSF-hosted SQL database (VPN required).
+* Extract raw email bodies from Solr (VPN required). 
+* Use **OpenAI LLM** to convert unstructured text into structured JSON objects.
+* Output standardized JSONL files ready for downstream enrichment.
 
 ### **Part 2 - Semantic Enrichment**
 
-* Uses **spaCy biomedical models** to identify chemical names and medically relevant terms.
-* Maps extracted terms to **RxNorm** to obtain RXCUI identifiers and normalized drug names.
-* Applies Qwen LLM to add enriched semantic information like decisions, concerns, events, location, financials, people.
-* Produces semantically enhanced JSON ready for entity resolution.
+* Use **spaCy biomedical models** to identify chemical names and medically relevant terms.
+* Map extracted terms to **RxNorm** to obtain RXCUI identifiers and normalized drug names.
+* Applie **Qwen LLM** to add enriched semantic information like decisions, concerns, events, location, financials, people.
+* Produce semantically enhanced JSON ready for entity resolution.
 
 ### **Part 3 - Entity Resolution & Graph Construction**
 
@@ -24,7 +24,7 @@ This project builds an end-to-end ETL pipeline that transforms raw opioid-relate
 * Preview duplicate entities
 * Resolve duplicates by merging similar entities
 * Report statistics
-* Loads the refined entities into nodes and edges in **Neo4j** to create the final Knowledge Graph
+* Load the refined entities into nodes and edges in **Neo4j** to construct the knowledge graph
 
 ## Setup
 
@@ -48,9 +48,9 @@ pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/e
 | `DB_NAME`      | Database name                               |
 | `DB_USER`      | Username                                    |
 | `DB_PASS`      | Password                                    |
-| `OPENAI_KEY`   | API key for OpenAPI                         |
-| `OPENAI_MODEL` | Model used for OpenAPI                      |
-| `NEO4J_URI`    | `neo4j://localhost:7687` for local instance |
+| `OPENAI_KEY`   | API key for OpenAI                         |
+| `OPENAI_MODEL` | Model used for OpenAI                      |
+| `NEO4J_URI`    | `"neo4j://localhost:7687"` for local instance |
 | `NEO4J_USER`   | `"neo4j"` for local instance                |
 | `NEO4J_PASS`   | Neo4j password                              |
 | `QWEN_API`     | API key for Qwen                            |
@@ -61,7 +61,7 @@ pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/e
 ## Output Files
 
 * `email_bodies_list.csv` - output of all ids and their email body text after extracting it from Solr
-* `all_emails_structured.jsonl` - output after OpenAPI process to get structured JSON
+* `all_emails_structured.jsonl` - output after OpenAI process to get structured JSON
 * `json_with_crossRefs.jsonl` - output after adding cross reference ids to JSONL
 * `json_with_crossRefs_rxnorm.jsonl` - output after adding RxNorm matched drugs names to JSONL
 * `enriched_output.jsonl` - final output after Qwen API process to get enriched JSON
