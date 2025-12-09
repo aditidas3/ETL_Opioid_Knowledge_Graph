@@ -61,7 +61,7 @@ pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/e
 ## Output Files
 
 * `email_bodies_list.csv` - output of all ids and their email body text after extracting it from Solr
-* `all_emails_structured.jsonl` - output after OpenAI process to get structured JSON
+* `OpenAI_API_Output.jsonl` - output after OpenAI process to get structured JSON
 * `json_with_crossRefs.jsonl` - output after adding cross reference ids to JSONL
 * `json_with_crossRefs_rxnorm.jsonl` - output after adding RxNorm matched drugs names to JSONL
 * `enriched_output.jsonl` - final output after Qwen API process to get enriched JSON
