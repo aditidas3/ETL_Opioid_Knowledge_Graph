@@ -325,10 +325,10 @@ class extractRXnormDrugs:
 # class to extract semantic entity using qwen api
 class QwenEntityExtractor:
 
-  def __init__(self, api_key: str):  
+  def __init__(self, api_key: str, model:str):  
     self.api_key = api_key2
     self.base_url = "https://openrouter.ai/api/v1/chat/completions"
-    self.model = "qwen/qwen-2.5-7b-instruct"
+    self.model = model
     self.rate_limit_delay = 1 # 1 second delay between each api requests
 
   def extract_body_info(self, body_text: str, context: Dict = None) -> Dict[str, Any]:
@@ -617,6 +617,7 @@ def merge_batches_to_jsonl(enriched_folder: str, output_file: str):
             json_line = json.dumps(item, ensure_ascii=False)
             f.write(json_line + '\n')    
     return all_items
+
 
 
 
