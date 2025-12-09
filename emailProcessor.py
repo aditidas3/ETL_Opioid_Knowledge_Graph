@@ -326,7 +326,7 @@ class extractRXnormDrugs:
 class QwenEntityExtractor:
 
   def __init__(self, api_key: str, model:str):  
-    self.api_key = api_key2
+    self.api_key = api_key
     self.base_url = "https://openrouter.ai/api/v1/chat/completions"
     self.model = model
     self.rate_limit_delay = 1 # 1 second delay between each api requests
@@ -617,6 +617,7 @@ def merge_batches_to_jsonl(enriched_folder: str, output_file: str):
             json_line = json.dumps(item, ensure_ascii=False)
             f.write(json_line + '\n')    
     return all_items
+
 
 
 
