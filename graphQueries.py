@@ -10,6 +10,84 @@ def ensure_list(x: Union[None, Dict[str, Any], List[Dict[str, Any]]]) -> List[Di
         return x
     return [x]
 
+def setup_constraints(uri, user, password):
+    driver = GraphDatabase.driver(uri, auth=(user, password))
+
+    constraint_statements = [
+        # Core entities
+        """
+        CREATE CONSTRAINT case_identifier IF NOT EXISTS
+        FOR (c:Case)
+        REQUIRE c.identifier IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT email_identifier IF NOT EXISTS
+        FOR (e:Email)
+        REQUIRE e.identifier IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT person_key IF NOT EXISTS
+        FOR (p:Person)
+        REQUIRE p.key IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT org_name IF NOT EXISTS
+        FOR (o:Organization)
+        REQUIRE o.name IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT document_name IF NOT EXISTS
+        FOR (d:Document)
+        REQUIRE d.name IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT place_name IF NOT EXISTS
+        FOR (pl:Place)
+        REQUIRE pl.name IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT topicentity_name IF NOT EXISTS
+        FOR (t:TopicEntity)
+        REQUIRE t.name IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT crossrefemail_cid IF NOT EXISTS
+        FOR (x:CrossRefEmail)
+        REQUIRE x.cid IS UNIQUE
+        """,
+
+        # Enriched-content entities
+        """
+        CREATE CONSTRAINT decision_text IF NOT EXISTS
+        FOR (d:Decision)
+        REQUIRE d.text IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT concern_text IF NOT EXISTS
+        FOR (c:Concern)
+        REQUIRE c.text IS UNIQUE
+        """,
+
+        # FinancialMention – there are two flavors, so we use two constraints:
+        # one for simple text mentions, one for (description, figure, currency)
+        """
+        CREATE CONSTRAINT financialmention_text IF NOT EXISTS
+        FOR (f:FinancialMention)
+        REQUIRE f.text IS UNIQUE
+        """,
+        """
+        CREATE CONSTRAINT financialmention_desc_fig_cur IF NOT EXISTS
+        FOR (f:FinancialMention)
+        REQUIRE (f.description, f.figure, f.currency) IS UNIQUE
+        """
+    ]
+
+    with driver.session() as session:
+        for stmt in constraint_statements:
+            session.run(stmt)
+
+    driver.close()
+
 
 # ----------------- Upsert helpers ----------------- #
 
