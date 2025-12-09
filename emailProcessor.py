@@ -176,6 +176,7 @@ class extractRXnormDrugs:
 
   # Load Spacy model with entity recognition
   def extract_chemicals_with_spacy(self,text):
+    nlp = spacy.load("en_ner_bc5cdr_md")
     doc = nlp(text)
     chemicals = []
     for ent in doc.ents:
@@ -617,6 +618,7 @@ def merge_batches_to_jsonl(enriched_folder: str, output_file: str):
             json_line = json.dumps(item, ensure_ascii=False)
             f.write(json_line + '\n')    
     return all_items
+
 
 
 
